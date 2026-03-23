@@ -72,4 +72,26 @@ public class RentalService
 
         Console.WriteLine($"Success: '{user.FirstName}' rented '{equipment.Name}' until {rental.DueDate.ToShortDateString()}.");
     }
+    public void ReturnEquipment(User user, Equipment equipment, DateTime actualReturnDate)
+    {
+        var rental = _rentals.FirstOrDefault(r => r.RentedBy.Id == user.Id && r.RentedEquipment.Id == equipment.Id && r.ReturnDate == null);
+
+        if (rental == null)
+        {
+            Console.WriteLine($"Error: No active rental found for '{user.FirstName}' and '{equipment.Name}'.");
+            return;
+        }
+
+        decimal penalty = 0;
+        if (actualReturnDate > rental.DueDate)
+        {
+            int daysLate = (actualReturnDate - rental.DueDate).Days;
+            penalty = daysLate * 50; 
+        }
+
+        rental.CompleteRental(actualReturnDate, penalty);
+        equipment.MarkAsAvailable();
+
+        Console.WriteLine($"Success: '{user.FirstName}' returned '{equipment.Name}'. Penalty applied: {penalty}");
+    }
 }
